@@ -1,0 +1,605 @@
+/* --- General & Root Styles --- */
+:root {
+    --primary-dark: #121828;
+    --secondary-dark: #1a2238;
+    --accent-orange: #f46c27;
+    --accent-orange-hover: #d05a20;
+    --accent-teal: #00ffff;
+    --accent-green: #28a745;
+    --text-light: #f0f0f0;
+    --text-muted: #a0a0a0;
+}
+
+html { scroll-behavior: smooth; }
+body { margin: 0; font-family: 'Poppins', sans-serif; background-color: var(--primary-dark); color: var(--text-light); overflow-x: hidden; }
+
+/* --- Loading & Notification Overlays --- */
+#successNotification {
+    position: fixed; bottom: 20px; left: 50%;
+    transform: translate(-50%, 100px);
+    background-color: var(--accent-green); color: white;
+    padding: 15px 25px; border-radius: 50px; box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+    z-index: 10000; font-weight: 600; display: flex; align-items: center; gap: 10px;
+    visibility: hidden; opacity: 0; transition: all 0.5s cubic-bezier(0.25, 1, 0.5, 1);
+}
+#successNotification.show { visibility: visible; opacity: 1; transform: translate(-50%, 0); }
+
+/* --- Header --- */
+.site-header {
+    position: fixed; top: 0; left: 0; width: 100%; display: flex;
+    justify-content: space-between; align-items: center; padding: 20px 1px;
+    box-sizing: border-box; z-index: 1000;
+    background: linear-gradient(to bottom, rgba(18, 24, 40, 0.8), transparent);
+    transition: background-color 0.3s ease, opacity 0.5s ease;
+}
+.site-header.scrolled { background-color: var(--primary-dark); }
+.logo { font-size: 28px; font-weight: 700; color: var(--text-light); user-select: none; animation: pulse-glow 3s infinite ease-in-out; }
+.logo span { color: var(--accent-orange); }
+nav a { color: var(--text-light); text-decoration: none; margin-left: 30px; font-size: 16px; font-weight: 600; transition: color 0.3s ease; }
+nav a:hover { color: var(--accent-orange); }
+
+/* --- NEW HERO SECTION STYLES --- */
+#hero-container {
+    height: 100vh;
+    width: 100vw;
+    position: fixed;
+    top: 0;
+    left: 0;
+    z-index: 0;
+}
+
+#hero-canvas { width: 100%; height: 100%; }
+
+#hero-animation-spacer { height: 300vh; }
+
+/* --- Page Content Layout --- */
+#page-content { position: relative; z-index: 1; background-color: var(--primary-dark); }
+main { background-color: transparent; }
+
+/* --- Content Sections --- */
+.content-section {
+    padding: 80px 50px;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    position: relative;
+    z-index: 2;
+    background-color: var(--primary-dark);
+}
+.section-title { text-align: center; font-size: 42px; font-weight: 700; margin-bottom: 60px; color: var(--text-light); }
+.section-title span { color: var(--accent-orange); }
+.section-subtitle { text-align: center; max-width: 800px; margin: -40px auto 60px auto; color: var(--text-muted); font-size: 18px; }
+
+.subjects-grid {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 30px; max-width: 1200px; margin: 0 auto;
+}
+.subject-card {
+    background: var(--secondary-dark); border-radius: 15px; text-align: center;
+    border: 1px solid rgba(255, 255, 255, 0.1); padding: 30px;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+.subject-card a, .subject-card div { text-decoration: none; color: inherit; display: block; }
+.subject-card:hover { transform: translateY(-10px); box-shadow: 0 15px 30px rgba(0,0,0,0.3); }
+.subject-card .icon { font-size: 48px; color: var(--accent-teal); margin-bottom: 20px; }
+.subject-card h3 { font-size: 24px; margin-bottom: 15px; color: var(--text-light); }
+.subject-card p { font-size: 16px; color: var(--text-muted); line-height: 1.6; }
+.subject-card.disabled { opacity: 0.5; cursor: not-allowed; }
+.subject-card.disabled:hover { transform: none; box-shadow: none; }
+
+/* --- Showcase Section --- */
+#showcase-section { display: flex; align-items: center; gap: 40px; }
+.showcase-text-content { flex: 1; text-align: right; padding-right: 20px; }
+.showcase-text-content h3 { font-size: 36px; font-weight: 700; margin: 0 0 10px 0; }
+.showcase-text-content p { font-size: 18px; color: var(--text-muted); }
+#typing-text { color: var(--accent-orange); font-weight: 600; }
+.cursor { display: inline-block; width: 3px; background-color: var(--accent-orange); animation: blink 0.7s infinite; }
+@keyframes blink { 0%, 100% { background-color: transparent; } 50% { background-color: var(--accent-orange); } }
+
+.showcase-wrapper {
+    flex: 2; display: flex; height: 455px; gap: 20px; border-radius: 15px;
+    background: var(--primary-dark); padding: 15px; box-sizing: border-box; border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+#showcaseViewport { flex: 3; position: relative; border-radius: 10px; overflow: hidden; background-color: var(--secondary-dark); }
+#showcaseViewport canvas { width: 100% !important; height: 100% !important; position: absolute; top: 0; left: 0; z-index: 1; }
+
+.controls-panel { flex: 1; display: flex; flex-direction: column; gap: 10px; color: var(--text-light); }
+.controls-panel h3 { text-align: center; color: var(--accent-orange); margin-top: 0; margin-bottom: 5px; }
+.control-group, .model-selector, .toggle-row { margin-bottom: 0; }
+.control-group label, .model-selector label, .toggle-row .control-label { display: block; margin-bottom: 6px; font-size: 14px; font-weight: 600; }
+.control-group input[type="range"] { width: 100%; cursor: pointer; }
+.control-group input[type="color"] { width: 100%; height: 35px; border: none; border-radius: 5px; cursor: pointer; }
+.custom-dropdown { position: relative; cursor: pointer; }
+.dropdown-selected { background: var(--secondary-dark); padding: 8px 12px; border-radius: 5px; border: 1px solid rgba(255, 255, 255, 0.2); }
+.dropdown-items { position: absolute; width: 100%; top: 100%; left: 0; background: var(--secondary-dark); border: 1px solid rgba(255, 255, 255, 0.2); border-radius: 5px; margin-top: 5px; z-index: 100; max-height: 200px; overflow-y: auto; }
+.dropdown-item { padding: 8px 12px; white-space: nowrap; }
+.dropdown-item:hover { background-color: var(--accent-orange); }
+.toggle-row { display: flex; justify-content: space-between; align-items: center; }
+.switch { position: relative; display: inline-block; width: 50px; height: 24px; }
+.switch input { opacity: 0; width: 0; height: 0; }
+.slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #ccc; transition: .4s; border-radius: 24px; }
+.slider:before { position: absolute; content: ""; height: 18px; width: 18px; left: 3px; bottom: 3px; background-color: white; transition: .4s; border-radius: 50%; }
+input:checked + .slider { background-color: var(--accent-orange); }
+input:checked + .slider:before { transform: translateX(26px); }
+#loadingMessage { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(18, 24, 40, 0.9); z-index: 200; display: flex; justify-content: center; align-items: center; }
+.loader { border: 6px solid #f3f3f3; border-top: 6px solid var(--accent-orange); border-radius: 50%; width: 50px; height: 50px; animation: spin 1.5s linear infinite; }
+@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+/* --- "FEATURES IN ACTION" SECTION STYLES --- */
+.features-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 30px; max-width: 1200px; margin: 0 auto; }
+.feature-card {
+    background: var(--secondary-dark);
+    border-radius: 15px;
+    padding: 30px;
+    text-align: center;
+
+    /* --- Add these lines for consistent, larger height --- */
+    min-height: 380px; /* Adjust this value up or down as needed */
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
+.feature-card h3 { font-size: 24px; color: var(--accent-teal); margin-top: 30px; margin-bottom: 15px; }
+.feature-card p { color: var(--text-muted); line-height: 1.6; }
+.feature-animation-box { 
+    height: 150px; 
+    /* background: var(--primary-dark);  <-- REMOVED */
+    border-radius: 10px; 
+    /* border: 1px solid rgba(255, 255, 255, 0.1); <-- REMOVED */
+    position: relative; 
+    display: flex; 
+    justify-content: center; 
+    align-items: center; 
+    padding: 15px; 
+    box-sizing: border-box; 
+}
+
+/* Animation for "Plan" card (INTEGRATED) */
+#plan-animation { flex-direction: column; align-items: flex-start; justify-content: space-around; }
+#plan-animation .plan-item { opacity: 0; animation: plan-fade-in 0.5s forwards; }
+#plan-animation .plan-item i { margin-right: 8px; color: var(--accent-orange); width: 20px; }
+#plan-animation .plan-item-1 { animation-delay: 0.5s; }
+#plan-animation .plan-item-2 { animation-delay: 1.0s; }
+#plan-animation .plan-item-3 { animation-delay: 1.5s; }
+#plan-animation .plan-item-4 { animation-delay: 2.0s; }
+@keyframes plan-fade-in { 0% { opacity: 0; transform: translateX(-15px); } 100% { opacity: 1; transform: translateX(0); } }
+
+/* Static animation for the "Present" card (FROM BACKUP) */
+/* --- Animation for "Present" Card --- */
+#present-card-animation .one-div {
+  position: relative;
+  height: 100%; /* Make it fit the container */
+  width: 100%; /* Make it fit the container */
+  background-color: rgb(15, 15, 15);
+  transform-style: preserve-3d;
+  animation: bobbing-animation 2s infinite ease;
+  border-radius: 20px;
+  box-shadow: 0 0 50px 0px, inset 0 0 90px 0px;
+  color: white;
+  transition: 1.5s;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  text-align: center; /* Ensures text wraps nicely if needed */
+  padding: 10px; /* Adds some inner spacing */
+  box-sizing: border-box;
+}
+
+#present-card-animation .one-div .text {
+  opacity: 0;
+  transition: all 0.5s;
+}
+
+#present-card-animation .one-div:hover .text {
+  transform: scale(1.2);
+  opacity: 0.7;
+}
+
+#present-card-animation .one-div:hover {
+  box-shadow: 0 0 30px 1000px black, inset 5px 5px 5px 0px rgb(31, 31, 31);
+}
+
+@keyframes bobbing-animation {
+  0% {
+    transform: rotateX(-15deg) translateY(0px);
+  }
+  50% {
+    transform: rotateX(-15deg) translateY(-10px);
+  }
+  100% {
+    transform: rotateX(-15deg) translateY(0px);
+  }
+}
+
+/* --- NEW CTA SECTION --- */
+#cta-section { text-align: center; background: transparent; }
+#cta-section h2 { font-size: 36px; margin-top: 0; margin-bottom: 15px; }
+#cta-section p { font-size: 18px; color: var(--text-muted); margin-bottom: 30px; }
+.cta-button {
+    display: inline-block; padding: 18px 45px; font-size: 22px; font-weight: 600;
+    background-color: var(--accent-orange); color: white; text-decoration: none; border: none;
+    border-radius: 50px; box-shadow: 0 8px 25px rgba(0,0,0,0.4); transition: all 0.3s ease; cursor: pointer;
+}
+.cta-button:hover { background-color: var(--accent-orange-hover); transform: translateY(-3px); box-shadow: 0 12px 30px rgba(0,0,0,0.5); }
+
+/* --- Contact Form Modal --- */
+#contactModal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0, 0, 0, 0.8); backdrop-filter: blur(5px); display: none; justify-content: center; align-items: center; z-index: 9998; opacity: 0; transition: opacity 0.3s ease; }
+#contactModal.visible { display: flex; opacity: 1; }
+.modal-content { background: var(--secondary-dark); padding: 30px 40px; border-radius: 15px; width: auto; max-width: 700px; height: auto; overflow-y: hidden; position: relative; transform: scale(0.95); transition: transform 0.3s ease; box-shadow: 0 10px 30px rgba(0,0,0,0.4); }
+#contactModal.visible .modal-content { transform: scale(1); }
+.modal-title { margin-top: 0; margin-bottom: 25px !important; text-align: center; }
+#closeModalBtn { position: absolute; top: 10px; right: 15px; font-size: 30px; color: var(--text-muted); background: none; border: none; cursor: pointer; }
+.form-group { margin-bottom: 20px; }
+.form-group label { display: block; margin-bottom: 8px; font-weight: 600; }
+.form-group input, .form-group textarea { width: 100%; padding: 12px; font-size: 16px; background: var(--primary-dark); border: 1px solid rgba(255,255,255,0.2); color: var(--text-light); border-radius: 8px; box-sizing: border-box; }
+.form-group textarea { resize: vertical; min-height: 100px; }
+.form-row { display: flex; gap: 20px; width: 100%; align-items: flex-end; }
+.form-row .form-group { flex: 1; min-width: 0; }
+
+/* --- Footer --- */
+.site-footer { background-color: transparent; text-align: center; padding: 40px 20px; }
+.footer-content { display: flex; flex-direction: column; align-items: center; gap: 20px; }
+
+/* --- Responsive Overrides --- */
+@media (max-width: 1200px) {
+    #showcase-section, .ar-content { flex-direction: column; }
+    .showcase-text-content { text-align: center; padding-right: 0; margin-bottom: 40px; }
+    .showcase-wrapper { width: 90%; }
+}
+@media (max-width: 900px) {
+    #showcase-wrapper { flex-direction: column; height: auto; }
+    #showcaseViewport { height: 400px; }
+    .modal-content { width: 80vw; }
+    .form-row { flex-direction: column; gap: 0; align-items: stretch; }
+}
+@media (max-width: 768px) {
+    .content-section { padding: 60px 20px; }
+    .site-header { padding: 20px; }
+    nav a { display: none; }
+    #hero-container, #hero-animation-spacer { display: none; }
+    #cta-section h2 { font-size: 42px; }
+    #cta-section p { font-size: 16px; }
+    .cta-button { font-size: 18px; padding: 15px 35px; }
+    .section-title { font-size: 36px; }
+    .modal-content { width: 90vw; padding: 20px; }
+}
+
+/* --- LOGO AND CUBE ANIMATIONS --- */
+@keyframes pulse-glow {
+    0%, 100% { text-shadow: 0 0 4px rgba(240, 240, 240, 0.4); }
+    50% { text-shadow: 0 0 12px rgba(240, 240, 240, 0.9); }
+}
+
+/* 3D Cube for "Explore in 3D" Card (FROM BACKUP) */
+.cube-container {
+  width: 100px;
+  height: 100px;
+  perspective: 800px;
+}
+
+.cube {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  transform-style: preserve-3d;
+  animation: rotate-cube 12s infinite linear;
+}
+
+.cube .face {
+  position: absolute;
+  width: 100px;
+  height: 100px;
+  color: #ff5555;
+  font-size: 18px;
+  font-weight: 700;
+  text-align: center;
+  line-height: 100px;
+  background: transparent;
+  opacity: 0.9;
+  border: 2px solid #ff4444;
+  box-shadow: 0 0 30px rgba(255, 50, 50, 0.6), inset 0 0 20px rgba(255, 50, 50, 0.4);
+}
+
+.cube .front  { transform: translateZ(50px); }
+.cube .back   { transform: rotateY(180deg) translateZ(50px); }
+.cube .right  { transform: rotateY(90deg) translateZ(50px); }
+.cube .left   { transform: rotateY(-90deg) translateZ(50px); }
+.cube .top    { transform: rotateX(90deg) translateZ(50px); }
+.cube .bottom { transform: rotateX(-90deg) translateZ(50px); }
+
+.cube-container:hover .cube {
+  animation-play-state: paused;
+}
+
+@keyframes rotate-cube {
+  from { transform: rotateX(0) rotateY(0); }
+  to   { transform: rotateX(360deg) rotateY(360deg); }
+}
+
+/* --- Pencil Loader Animation (Corrected) --- */
+.feature-animation-box .loader {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%,-50%);
+  animation: animate 8s linear infinite;
+  /* Override conflicting styles */
+  border: none; 
+  width: auto;
+  height: auto;
+}
+
+.feature-animation-box .loader .pencil {
+  width: 150px;
+  background: #ffc334;
+  border-top: 10px solid #ffd268;
+  border-bottom: 10px solid #e3af38;
+  overflow: hidden;
+  transform-origin: top;
+}
+
+.feature-animation-box .loader .pencil p {
+  margin: 0;
+  padding: 0;
+  text-align: center;
+  font-size: 9px;
+  line-height: 15px;
+  text-transform: uppercase;
+  font-weight: bold;
+  color: #000000;
+}
+
+.feature-animation-box .loader .pencil:before {
+  content: '';
+  position: absolute;
+  left: -80px;
+  top: 0;
+  border-style: solid;
+  border-color: transparent #e29663 transparent transparent;
+  border-width: 17px 40px 18px;
+}
+
+.feature-animation-box .loader .pencil:after {
+  content: '';
+  position: absolute;
+  left: -80px;
+  top: 0;
+  border-style: solid;
+  border-color: transparent #262626 transparent transparent;
+  border-width: 17px 40px 18px;
+  transform: scale(.3);
+}
+
+.feature-animation-box .loader .top {
+  position: absolute;
+  top: 0;
+  right: 0;
+  height: 15px;
+  width: 25px;
+  background: #ccc;
+  border-top: 10px solid #dedede;
+  border-bottom: 10px solid #b9bfbf;
+}
+
+.feature-animation-box .loader .top:before {
+  content: '';
+  position: absolute;
+  top: -10px;
+  right: -150%;
+  width: 150%;
+  height: 100%;
+  background: #d76f6e;
+  border-top: 10px solid #da8e8d;
+  border-bottom: 10px solid #c85957;
+  border-top-right-radius: 5px;
+  border-bottom-right-radius: 5px;
+  z-index: 2;
+}
+
+.feature-animation-box .loader .stroke {
+  position: absolute;
+  top: 50%;
+  left: calc(100% - 80px);
+  transform: translate(-50%,-50%) rotate(45deg);
+  border: 5px solid transparent;
+  border-left-color: #000;
+  border-top-color: #000;
+  width: 220px;
+  height: 220px;
+  border-radius: 50%;
+  z-index: 1;
+}
+
+@keyframes animate {
+  0% {
+    transform: translate(-50%,-50%) rotate(360deg);
+  }
+
+  100% {
+    transform: translate(-50%,-50%) rotate(0deg);
+  }
+}
+
+/* --- Override to lift ONLY the first card's animation --- */
+#features .feature-card:nth-child(1) .feature-animation-box {
+    position: relative; /* Required for z-index */
+    z-index: 10;      /* Lifts only the animation box to a higher layer */
+}
+
+/* --- AR Section Styles --- */
+#ar-section {
+    background: var(--primary-dark); /* Match the dark theme */
+}
+
+.ar-content {
+    display: flex;
+    align-items: center;
+    gap: 60px; /* Increased gap for better spacing */
+    max-width: 1200px;
+    margin: 60px auto 0 auto;
+}
+
+.ar-visual {
+    flex: 1;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.ar-phone-frame {
+    width: 280px;
+    height: 560px;
+    background-color: #111;
+    border: 12px solid #000;
+    border-radius: 40px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.5), inset 0 0 5px rgba(255,255,255,0.1);
+    padding: 5px;
+    box-sizing: border-box;
+    position: relative;
+}
+
+.ar-phone-frame::before { /* Simulates the top notch/camera */
+    content: '';
+    position: absolute;
+    top: 15px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 80px;
+    height: 8px;
+    background-color: #000;
+    border-radius: 10px;
+}
+
+.ar-camera-view {
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(145deg, var(--secondary-dark), #2a3452);
+    border-radius: 30px;
+    position: relative;
+    overflow: hidden;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.ar-3d-model {
+    font-size: 120px;
+    color: var(--accent-teal);
+    opacity: 0.8;
+    filter: drop-shadow(0 0 15px var(--accent-teal));
+    animation: bobbing-model 4s infinite ease-in-out;
+}
+
+@keyframes bobbing-model {
+    0% { transform: translateY(0) rotate(0deg); }
+    50% { transform: translateY(-20px) rotate(5deg); }
+    100% { transform: translateY(0) rotate(0deg); }
+}
+
+.ar-text-content {
+    flex: 1.5; /* Give text slightly more space */
+}
+
+.ar-text-content h3 {
+    font-size: 32px;
+    color: var(--text-light);
+    margin-top: 0;
+}
+
+.ar-text-content p {
+    font-size: 18px;
+    line-height: 1.7;
+    color: var(--text-muted);
+}
+
+.ar-text-content ul {
+    list-style: none;
+    padding: 0;
+    margin-top: 30px;
+}
+
+.ar-text-content li {
+    display: flex;
+    align-items: flex-start;
+    margin-bottom: 20px;
+    font-size: 16px;
+}
+
+.ar-text-content li i {
+    color: var(--accent-green);
+    margin-right: 15px;
+    font-size: 20px;
+    margin-top: 4px;
+}
+
+/* Responsive override for the AR section */
+@media (max-width: 900px) {
+    .ar-content {
+        flex-direction: column;
+        gap: 40px;
+    }
+    .ar-text-content {
+        text-align: center;
+    }
+    .ar-text-content li {
+        justify-content: center;
+        text-align: left;
+    }
+}
+
+/* --- Footer Canvas Background --- */
+.site-footer {
+    position: relative; /* Required for child absolute positioning */
+    overflow: hidden;   /* Keeps canvas within footer bounds */
+}
+
+#footer-canvas {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: -1; /* Places the canvas BEHIND the footer text */
+}
+
+/* --- CTA Canvas Background --- */
+#cta-section {
+    position: relative; /* Required for child absolute positioning */
+    overflow: hidden;   /* Keeps canvas within section bounds */
+}
+
+#cta-canvas {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: -1; /* Places the canvas BEHIND the CTA content */
+}
+
+/* --- Styles for Header Logo Image --- */
+.logo {
+  display: flex;
+  align-items: center; /* Vertically aligns the image and text */
+  gap: 1px;         /* Creates space between the image and the text */
+}
+
+.logo img {
+  height: 100px;      /* Sets a fixed height for the logo image */
+  width: auto;       /* Maintains the image's aspect ratio */
+}
+
+/* --- Rule to pull the text logo closer to the image --- */
+.logo div {
+  margin-left: -30px; /* Pulls the text 15px to the left */
+}
+
+/* ================================================= */
+/* === START: Styles for the new AR 3D model canvas === */
+/* ================================================= */
+
+/* Style the canvas to fill its container */
+#ar-model-canvas {
+    width: 100%;
+    height: 100%;
+    display: block; /* Ensures it behaves correctly as a block element */
+}

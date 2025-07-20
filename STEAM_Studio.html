@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>STEAM Studio - Interactive 3D Learning</title>
+    
+    <link rel="stylesheet" href="studio_styles.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+
+    <!-- This container holds the fixed 3D canvas and the scroll prompt -->
+    <div id="hero-container">
+        <canvas id="hero-canvas"></canvas>
+    </div>
+
+    <!-- This empty div's height defines the scroll length of the hero animation -->
+    <div id="hero-animation-spacer"></div>
+
+    <!-- The rest of your page content, which will scroll over the top -->
+    <div id="page-content">
+        <header class="site-header" id="siteHeader">
+            <div class="logo"><img src="assets/Logo.png" alt="STEAM Studio Logo"><div>STEAM<span>Studio</span></div></div>
+            <nav>
+                <a href="#subjects">Subjects</a>
+                <a href="#showcase-section">Showcase</a>
+                <a href="#features">Features</a>
+            </nav>
+        </header>
+
+        <main>
+            <section id="subjects" class="content-section">
+                <h2 class="section-title">Explore by <span>Subject</span></h2>
+                <p class="section-subtitle">Dive into our comprehensive modules. While all subjects are planned, the Science module is fully interactive and ready for exploration.</p>
+                <div class="subjects-grid">
+                     <div class="subject-card">
+                        <a href="Science/science.html" id="scienceLink">
+                            <div class="icon"><i class="fas fa-flask"></i></div>
+                            <h3>Science</h3>
+                            <p>Explore biology, chemistry, and physics with hands-on simulations. Ready to enter!</p>
+                        </a>
+                    </div>
+                    <div class="subject-card disabled">
+                        <div>
+                            <div class="icon"><i class="fas fa-microchip"></i></div>
+                            <h3>Technology</h3>
+                            <p>Deconstruct algorithms and hardware in an intuitive, visual environment. (Coming Soon)</p>
+                        </div>
+                    </div>
+                    <div class="subject-card disabled">
+                        <div>
+                            <div class="icon"><i class="fas fa-cogs"></i></div>
+                            <h3>Engineering</h3>
+                            <p>Build and test virtual machines, from simple levers to complex engines. (Coming Soon)</p>
+                        </div>
+                    </div>
+                    <div class="subject-card disabled">
+                        <div>
+                           <div class="icon"><i class="fas fa-palette"></i></div>
+                           <h3>Arts</h3>
+                           <p>Understand perspective, form, and color theory through interactive 3D art. (Coming Soon)</p>
+                        </div>
+                    </div>
+                     <div class="subject-card disabled">
+                        <div>
+                           <div class="icon"><i class="fas fa-calculator"></i></div>
+                           <h3>Mathematics</h3>
+                           <p>Visualize complex geometric shapes and abstract mathematical concepts. (Coming Soon)</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+            
+            <section id="showcase-section" class="content-section">
+                <div class="showcase-text-content">
+                    <h3>Interactive 3D Showcase</h3>
+                    <p>Explore the worlds of <span id="typing-text"></span><span class="cursor">&nbsp;</span></p>
+                </div>
+
+                <div class="showcase-wrapper">
+                    <div id="showcaseViewport"></div>
+                    <div class="controls-panel">
+                        <h3>Controls</h3>
+                        <div class="model-selector">
+                            <label>Select Model</label>
+                            <div class="custom-dropdown">
+                                <div class="dropdown-selected" id="dropdownSelected">All Models</div>
+                                <div class="dropdown-items" id="dropdownItems" style="display: none;"></div>
+                            </div>
+                        </div>
+                        <div class="control-group"><label>Ambient Light</label><input type="range" min="0.1" max="5.0" value="2.0" step="0.1" onchange="updateAmbientLight(this.value)"></div>
+                        <div class="control-group" id="rotationSpeedLabel"><label>Rotation Speed</label><input type="range" min="0" max="0.02" step="0.001" value="0.005" onchange="updateRotationSpeed(this.value)"></div>
+                        <div class="control-group" id="modelScaleLabel" style="display:none;"><label>Model Scale</label><input type="range" min="1" max="15" value="5" step="0.1" onchange="updateModelScale(this.value)"></div>
+                        <div class="control-group"><label>Background Color</label><input type="color" value="#000000" onchange="updateBackgroundColor(this.value)"></div>
+                        <div class="toggle-row"><span class="control-label">Wireframe</span><label class="switch"><input type="checkbox" id="wireframeToggle"><span class="slider"></span></label></div>
+                        <div class="toggle-row" id="animationToggleRow" style="display:none;"><span class="control-label">Animation</span><label class="switch"><input type="checkbox" id="animationToggle" checked><span class="slider"></span></label></div>
+                        <div class="toggle-row"><span class="control-label">AR Mode</span><label class="switch"><input type="checkbox" id="arToggle"><span class="slider"></span></label></div>
+                    </div>
+                </div>
+            </section>
+
+
+           <!-- =================== NEW AR SECTION START =================== -->
+            <section id="ar-section" class="content-section">
+                <h2 class="section-title">Bring Learning to Life with <span>AR</span></h2>
+                <p class="section-subtitle">Bridge the gap between digital models and the physical world. Our AR mode turns any space into an interactive laboratory.</p>
+                
+                <div class="ar-content">
+                    <div class="ar-visual">
+                        <div class="ar-phone-frame">
+                            <div class="ar-camera-view">
+                                <div class="ar-3d-model">
+                                  <canvas id="ar-model-canvas"></canvas>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="ar-text-content">
+                        <h3>Tangible, Immersive, Unforgettable.</h3>
+                        <p>With our Augmented Reality feature, students are no longer passive observers. They can place, inspect, and interact with complex 3D models in their own environment, fostering a deeper, more intuitive understanding of spatial relationships and intricate details.</p>
+                        <ul>
+                            <li><i class="fas fa-check-circle"></i> <strong>Real-World Scale:</strong> Visualize objects as they would appear in real life, from a cell to a solar system.</li>
+                            <li><i class="fas fa-check-circle"></i> <strong>Collaborative Discovery:</strong> Allow multiple students to view and discuss the same AR model from different angles.</li>
+                            <li><i class="fas fa-check-circle"></i> <strong>Safe & Accessible:</strong> Conduct complex experiments or explore dangerous subjects in a completely safe, virtual context.</li>
+                        </ul>
+                    </div>
+                </div>
+            </section>
+            <!-- =================== NEW AR SECTION END ===================== -->
+
+            
+            <section id="features" class="content-section">
+                <h2 class="section-title">A Unified Toolkit for <span>Modern Educators</span></h2>
+                 <div class="features-grid">
+                    <!-- Card 1: Plan Your Lessons -->
+                    <div class="feature-card">
+                        <div class="feature-animation-box">
+                            <div class="loader">
+                                <div class="pencil">
+                                    <p>Craft Your Lesson</p>
+                                    <div class="top"></div>
+                                </div>
+                                <div class="stroke"></div>
+                            </div>
+                        </div>
+                        <h3>Plan Your Lessons</h3>
+                        <p>Use the integrated Lesson Plan tab to structure your curriculum using the 5E model, adding objectives and resources directly.</p>
+                    </div>
+                    <!-- Card 2: Present with Impact (FROM FUNCTIONAL BACKUP) -->
+                   <!-- Card 2: Present with Impact -->
+<div class="feature-card">
+    <div class="feature-animation-box" id="present-card-animation"> <!-- Added an ID for specific styling -->
+        <div class="one-div">
+          <div class="text">Engage your students</div>
+        </div>
+    </div>
+    <h3>Present with Impact</h3>
+    <p>Switch to the Present tab to deliver engaging, slide-based lessons. Add text, images, and interactive tools to captivate your students.</p>
+</div>
+                    <!-- Card 3: Explore in 3D (FROM FUNCTIONAL BACKUP) -->
+                    <div class="feature-card">
+                        <div class="feature-animation-box">
+                            <div class="cube-container">
+                              <div class="cube">
+                                <div class="face front">NGSS</div>
+                                <div class="face back">CSTA</div>
+                                <div class="face right">ISTE</div>
+                                <div class="face left">CCSSM</div>
+                                <div class="face top">NCAS</div>
+                                <div class="face bottom">STEL</div>
+                              </div>
+                            </div>
+                        </div>
+                        <h3>Explore in 3D</h3>
+                        <p>The Explore tab is where the magic happens. Interact with models using real-time simulation controls to demonstrate complex concepts.</p>
+                    </div>
+                </div>
+            </section>
+            
+            <section id="cta-section" class="content-section">
+            <canvas id="cta-canvas"></canvas>
+                <h2>Ready to Reimagine Your Classroom?</h2>
+                <p>Integrate STEAM Studio into your learning environment and unlock a new dimension of education.</p>
+                <button class="cta-button" id="main-cta-button">Ask About Integration</button>
+            </section>
+        </main>
+
+        <footer class="site-footer">
+            <div class="footer-content">
+           <canvas id="footer-canvas"></canvas>
+                <p>&copy; 2024 STEAM Studio. All rights reserved.</p>
+            </div>
+        </footer>
+    </div>
+    
+    <div id="contactModal">
+        <div class="modal-content">
+            <button id="closeModalBtn">&times;</button>
+            <h2 class="section-title modal-title">Integration Inquiry</h2>
+            <form id="contactForm" action="https://formsubmit.co/mabdullahanany@gmail.com" method="POST">
+                 <div class="form-row">
+                    <div class="form-group"><label for="name">Full Name</label><input type="text" id="name" name="name" required></div>
+                    <div class="form-group"><label for="email">Email Address</label><input type="email" id="email" name="email" required></div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group"><label for="tel">Mobile Number (Optional)</label><input type="tel" id="tel" name="mobile_number"></div>
+                    <div class="form-group"><label for="whatsapp">WhatsApp Number (Optional)</label><input type="tel" id="whatsapp" name="whatsapp_number"></div>
+                </div>
+                <div class="form-group"><label for="organization">School / Organization</label><input type="text" id="organization" name="organization"></div>
+                <div class="form-group"><label for="message">Message</label><textarea id="message" name="message" required placeholder="How can we help you integrate STEAM Studio?"></textarea></div>
+                <input type="hidden" name="_subject" value="New STEAM Studio Integration Inquiry!">
+                <input type="hidden" name="_captcha" value="false">
+                <button type="submit" class="cta-button" style="width: 100%;">Send Message</button>
+            </form>
+        </div>
+    </div>
+
+    <div id="successNotification">
+        <i class="fas fa-check-circle"></i>
+        <span>Request sent successfully! We'll get back to you shortly.</span>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/DRACOLoader.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/FontLoader.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/geometries/TextGeometry.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@tweenjs/tween.js@18.6.4/dist/tween.umd.js"></script>
+    
+    <script src="studio_logic.js" defer></script>
+    <script src="hero_animation.js" defer></script>
+
+<!-- ======================================================= -->
+<!-- ======================================================= -->
+<!-- START: Replace old script with this entire new block -->
+<!-- ======================================================= -->
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const arCanvas = document.getElementById('ar-model-canvas');
+        if (!arCanvas) return;
+        
+        // --- CHANGE 1: Get the container that defines the phone screen shape ---
+        const arContainer = arCanvas.parentElement.parentElement; // This is the .ar-camera-view div
+
+        // 1. Scene Setup
+        const scene = new THREE.Scene();
+
+        // --- CHANGE 2: Set camera aspect ratio based on the CONTAINER's dimensions ---
+        const camera = new THREE.PerspectiveCamera(40, arContainer.clientWidth / arContainer.clientHeight, 0.1, 1000);
+        camera.position.z = 15; // Pull camera back to see the whole model
+
+        const renderer = new THREE.WebGLRenderer({ canvas: arCanvas, alpha: true, antialias: true });
+        renderer.setSize(arContainer.clientWidth, arContainer.clientHeight); // Explicitly set size
+        renderer.setPixelRatio(window.devicePixelRatio); // For sharp text on high-res screens
+
+        // 2. Lighting
+        scene.add(new THREE.AmbientLight(0xffffff, 2.5));
+        const directionalLight = new THREE.DirectionalLight(0xffffff, 3.0);
+        directionalLight.position.set(5, 10, 7.5);
+        scene.add(directionalLight);
+
+        // 3. Model Loading and Setup
+        const modelContainer = new THREE.Group();
+        scene.add(modelContainer);
+
+        const dracoLoader = new THREE.DRACOLoader();
+        dracoLoader.setDecoderPath('https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/libs/draco/');
+        
+        const loader = new THREE.GLTFLoader();
+        loader.setDRACOLoader(dracoLoader);
+        
+        loader.load(
+            'assets/neuronal_cell_environment.compressed.glb',
+            function (gltf) {
+                const model = gltf.scene;
+
+                const box = new THREE.Box3().setFromObject(model);
+                const center = box.getCenter(new THREE.Vector3());
+                model.position.sub(center);
+                modelContainer.add(model);
+
+                // --- CHANGE 3: Scale the model to fit the new, correct viewport ---
+                const size = box.getSize(new THREE.Vector3());
+                const targetWidth = 10; // This is our target visual size for the width
+                const scale = targetWidth / size.x;
+                modelContainer.scale.set(scale, scale, scale);
+            },
+            undefined,
+            function (error) {
+                console.error('An error happened while loading the AR model:', error);
+            }
+        );
+
+        // 4. Animation Loop
+        function animate() {
+            requestAnimationFrame(animate);
+            modelContainer.rotation.y += 0.005; 
+            renderer.render(scene, camera);
+        }
+        animate();
+    });
+</script>
+<!-- ======================================================= -->
+<!-- END: New script block -->
+
+</body>
+</html>
