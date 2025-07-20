@@ -1,0 +1,847 @@
+<script type="text/javascript">
+        var gk_isXlsx = false;
+        var gk_xlsxFileLookup = {};
+        var gk_fileData = {};
+        function filledCell(cell) {
+          return cell !== '' && cell != null;
+        }
+        function loadFileData(filename) {
+        if (gk_isXlsx && gk_xlsxFileLookup[filename]) {
+            try {
+                var workbook = XLSX.read(gk_fileData[filename], { type: 'base64' });
+                var firstSheetName = workbook.SheetNames[0];
+                var worksheet = workbook.Sheets[firstSheetName];
+
+                // Convert sheet to JSON to filter blank rows
+                var jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1, blankrows: false, defval: '' });
+                // Filter out blank rows (rows where all cells are empty, null, or undefined)
+                var filteredData = jsonData.filter(row => row.some(filledCell));
+
+                // Heuristic to find the header row by ignoring rows with fewer filled cells than the next row
+                var headerRowIndex = filteredData.findIndex((row, index) =>
+                  row.filter(filledCell).length >= filteredData[index + 1]?.filter(filledCell).length
+                );
+                // Fallback
+                if (headerRowIndex === -1 || headerRowIndex > 25) {
+                  headerRowIndex = 0;
+                }
+
+                // Convert filtered JSON back to CSV
+                var csv = XLSX.utils.aoa_to_sheet(filteredData.slice(headerRowIndex)); // Create a new sheet from filtered array of arrays
+                csv = XLSX.utils.sheet_to_csv(csv, { header: 1 });
+                return csv;
+            } catch (e) {
+                console.error(e);
+                return "";
+            }
+        }
+        return gk_fileData[filename] || "";
+        }
+        </script><!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Science Section - STEAM Studio</title>
+    <link rel="stylesheet" href="science.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/particles.js@2.0.0/particles.min.js"></script>
+</head>
+<body>
+    <div class="sidebar" id="sidebar">
+        <div class="button" id="btnHome" onclick="window.location.href='../STEAM_Studio.html'">Home</div>
+        <div class="spacer"></div>
+        <div class="button" id="btnContentHub" onclick="window.location.href='./Grade One/content_hub.html'">Content Hub</div>
+    </div>
+    <div class="main-content" id="mainContent">
+        <div class="info-viewport" id="infoViewport">
+            <h2>Welcome to the Science Section</h2>
+            <p>Welcome to the <strong>Science Section</strong> of Smartistic-Lab Studio. Select a grade to explore science concepts through interactive 3D models and lesson plans.</p>
+        </div>
+        <div class="model-viewport" id="mainViewport">
+            <div id="particles-js" style="position: absolute; width: 100%; height: 100%; z-index: 1;"></div>
+            <div id="loadingMessage">Loading models...</div>
+        </div>
+    </div>
+    <div class="simulation-panel" id="simulationPanel">
+        <h3>Simulation Panel</h3>
+        <div class="controls-container">
+            <label title="Changes the speed at which the model rotates (simulates angular velocity).">Rotation Speed: <input type="range" min="0" max="0.05" step="0.001" value="0.005" id="rotationSpeedSim"> <span id="rotationSpeedValue">0.005</span></label>
+            <label id="specificParamLabel" style="display: none;" title="Model-specific parameter affecting its behavior.">Specific Parameter: <input type="range" min="0.5" max="2" step="0.05" value="1" id="specificParam"> <span id="specificParamValue">1.0</span></label>
+            <label id="modelScaleLabel" style="display: none;" title="Adjusts the overall scale of the selected model.">Model Scale: <input type="range" min="0.5" max="2" step="0.01" value="1" id="modelScale"> <span id="modelScaleValue">1.0</span></label>
+            <label title="Applies a horizontal force to the model (simulates push or pull).">Force Magnitude: <input type="range" min="-0.5" max="0.5" step="0.01" value="0" id="forceMagnitude"> <span id="forceMagnitudeValue">0.0</span></label>
+            <label title="Simulates surface friction affecting the model's movement.">Friction Coefficient: <input type="range" min="0" max="1" step="0.01" value="0" id="frictionCoefficient"> <span id="frictionCoefficientValue">0.00</span></label>
+            <label title="Affects how the model responds to forces (heavier models move less).">Mass: <input type="range" min="0.5" max="2" step="0.05" value="1" id="mass"> <span id="massValue">1.0</span></label>
+            <label title="Simulates how bouncy the model is when it moves vertically.">Elasticity: <input type="range" min="0" max="1" step="0.01" value="0" id="elasticity"> <span id="elasticityValue">0.00</span></label>
+            <label title="Simulates air resistance affecting the model's movement.">Air Resistance: <input type="range" min="0" max="1" step="0.01" value="0" id="airResistance"> <span id="airResistanceValue">0.00</span></label>
+            <label title="Applies rotational force to the model (simulates torque).">Torque: <input type="range" min="-0.01" max="0.01" step="0.0005" value="0" id="torque"> <span id="torqueValue">0.000</span></label>
+            <label title="Adjusts the energy level, affecting animation or movement speed.">Energy Level: <input type="range" min="0.5" max="2" step="0.05" value="1" id="energyLevel"> <span id="energyLevelValue">1.0</span></label>
+            <label title="Adjusts the intensity of the spotlight illuminating the model.">Spotlight Intensity: <input type="range" min="0" max="5" step="0.1" value="3" id="lightIntensity"> <span id="lightIntensityValue">3.0</span></label>
+            <label title="Adjusts the intensity of the ambient light illuminating the scene.">Ambient Light: <input type="range" min="0" max="5" step="0.1" value="2" id="ambientLightIntensity"> <span id="ambientLightIntensityValue">2.0</span></label>
+            <button class="reset-button" onclick="resetSimulation()">Reset Simulation</button>
+        </div>
+    </div>
+    <div id="infoPopup">
+        <div class="popup-header">
+            <button class="popup-close" onclick="document.getElementById('infoPopup').style.display='none'">X</button>
+        </div>
+        <div class="popup-content"></div>
+    </div>
+    <div id="contentHubModal" style="display: none;">
+        <div class="modal-header">
+            <h2>Content Hub</h2>
+            <button class="modal-close" onclick="document.getElementById('contentHubModal').style.display='none'">X</button>
+        </div>
+        <div class="modal-content" id="contentHubContent"></div>
+    </div>
+
+    <script>
+        let currentScene, currentRenderer, currentCamera, currentControls, ground, modelGroup;
+        let arStream = null, arMode = false, currentModels = [], selectedModelIndex = -1;
+        let animationEnabled = true, selectedModelName = "All Models";
+        let mixers = [], clock = new THREE.Clock(), rotationSpeed = 0.005;
+        let originalScales = new Map(), originalPositions = new Map(), animationFrameId = null;
+        let raycaster, mouse;
+        let spotLight, ambientLight;
+        let currentViewportId = 'mainViewport';
+        let simRotationSpeed = 0.005;
+        let specificParamValue = 1;
+        let modelScaleValue = 1;
+        let forceMagnitude = 0;
+        let frictionCoefficient = 0;
+        let mass = 1;
+        let elasticity = 0;
+        let airResistance = 0;
+        let torque = 0;
+        let energyLevel = 1;
+        let lightIntensity = 3;
+        let ambientLightIntensity = 2;
+        let velocities = new Map();
+
+        const scienceGradeContent = {
+            grade1: {
+                models: [
+                    { path: 'https://raw.githubusercontent.com/Bedo77/3d-model-viewer/main/Science/grade_one-arcade_machine.glb', name: 'Grade One Arcade Machine', scale: { x: 0.5, y: 0.5, z: 0.5 }, color1: 0x2c7481, color2: 0x96a151 },
+                    { path: 'https://raw.githubusercontent.com/Bedo77/3d-model-viewer/main/Science/grade_one-time_machine.glb', name: 'Grade One Time Machine', scale: { x: 0.5, y: 0.5, z: 0.5 }, color1: 0xf47e42, color2: 0xc86432 }
+                ]
+            },
+            grade2: {
+                models: [
+                    { path: 'https://raw.githubusercontent.com/Bedo77/3d-model-viewer/main/Science/grade_two-forces_on_a_rotating_man.glb', name: 'Forces on a Rotating Man', scale: { x: 0.5, y: 0.5, z: 0.5 }, color1: 0xdadad8, color2: 0xb0b0a8 }
+                ]
+            },
+            grade3: {
+                models: [
+                    { path: 'https://raw.githubusercontent.com/Bedo77/3d-model-viewer/main/Science/grade_three-electromagneticwave.glb', name: 'Electromagnetic Wave', scale: { x: 0.5, y: 0.5, z: 0.5 }, color1: 0x2c7481, color2: 0x96a151 },
+                    { path: 'https://raw.githubusercontent.com/Bedo77/3d-model-viewer/main/Science/grade_three-electromagnetic_portal.glb', name: 'Electromagnetic Portal', scale: { x: 0.5, y: 0.5, z: 0.5 }, color1: 0xf47e42, color2: 0xc86432 }
+                ]
+            }
+        };
+
+        const allScienceModels = [
+            ...scienceGradeContent.grade1.models,
+            ...scienceGradeContent.grade2.models,
+            ...scienceGradeContent.grade3.models
+        ];
+
+        document.addEventListener('DOMContentLoaded', () => {
+            currentViewportId = 'mainViewport';
+            initializeScene('mainViewport');
+            loadModels(allScienceModels, 'mainViewport');
+            updateInfoArea('main');
+            setupGradeButtons();
+            setupControlListeners();
+            document.getElementById('simulationPanel').style.display = 'flex';
+            document.getElementById('mainContent').classList.remove('full-width');
+            initializeParticles();
+        });
+
+        function initializeScene(viewportId) {
+            const viewport = document.getElementById(viewportId);
+            if (!viewport) return;
+
+            currentRenderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+            currentRenderer.setSize(viewport.clientWidth, viewport.clientHeight);
+            currentRenderer.setClearColor(0x000000, arMode ? 0 : 1);
+            viewport.appendChild(currentRenderer.domElement);
+            currentRenderer.domElement.style.position = 'absolute';
+            currentRenderer.domElement.style.zIndex = '10';
+            currentRenderer.domElement.style.pointerEvents = 'auto';
+
+            currentScene = new THREE.Scene();
+            currentCamera = new THREE.PerspectiveCamera(75, viewport.clientWidth / viewport.clientHeight, 0.1, 1000);
+            currentCamera.position.set(0, 2, 5);
+            currentControls = new THREE.OrbitControls(currentCamera, currentRenderer.domElement);
+            currentControls.enableDamping = true;
+            currentControls.dampingFactor = 0.1;
+            currentControls.enablePan = true;
+            currentControls.panSpeed = 0.5;
+            currentControls.mouseButtons = { LEFT: THREE.MOUSE.ROTATE, MIDDLE: THREE.MOUSE.PAN, RIGHT: THREE.MOUSE.DOLLY };
+            currentControls.enableZoom = true;
+            currentControls.minDistance = 2;
+            currentControls.maxDistance = 50;
+            currentControls.target.set(0, 2, 0);
+            currentControls.update();
+
+            currentRenderer.domElement.addEventListener('dblclick', onCanvasDoubleClick);
+
+            ambientLight = new THREE.AmbientLight(0xA9A9A9, ambientLightIntensity);
+            currentScene.add(ambientLight);
+
+            spotLight = new THREE.SpotLight(0xffffff, lightIntensity);
+            spotLight.position.set(5, 10, 5);
+            spotLight.angle = 0.785;
+            spotLight.penumbra = 0.5;
+            spotLight.castShadow = true;
+            currentScene.add(spotLight);
+
+            raycaster = new THREE.Raycaster();
+            mouse = new THREE.Vector2();
+
+            createGround();
+            createModelGroup();
+            animate();
+        }
+
+        function resizeRenderer(viewportId, retryCount = 15, delay = 300) {
+            const viewport = document.getElementById(viewportId);
+            if (!viewport || !currentRenderer || !currentCamera) return;
+
+            const width = viewport.offsetWidth;
+            const height = viewport.offsetHeight;
+            if (height === 0 || width === 0) {
+                if (retryCount > 0) {
+                    setTimeout(() => resizeRenderer(viewportId, retryCount - 1, delay), delay);
+                }
+                return;
+            }
+            currentRenderer.setSize(width, height);
+            currentCamera.aspect = width / height;
+            currentCamera.updateProjectionMatrix();
+        }
+
+        function cleanupScene() {
+            if (animationFrameId) cancelAnimationFrame(animationFrameId);
+            if (currentRenderer) {
+                currentRenderer.domElement.removeEventListener('dblclick', onCanvasDoubleClick);
+                currentRenderer.dispose();
+                const canvas = currentRenderer.domElement;
+                if (canvas && canvas.parentNode) {
+                    canvas.parentNode.removeChild(canvas);
+                }
+            }
+            if (currentControls) currentControls.dispose();
+            if (currentScene) {
+                currentScene.traverse(object => {
+                    if (object.isMesh) {
+                        if (object.geometry) object.geometry.dispose();
+                        if (object.material) (Array.isArray(object.material) ? object.material : [object.material]).forEach(mat => mat.dispose());
+                    }
+                });
+                currentScene = null;
+            }
+            mixers = [];
+            if (arStream) {
+                arStream.getTracks().forEach(track => track.stop());
+                arStream = null;
+            }
+        }
+
+        function createGround() {
+            const geometry = new THREE.CircleGeometry(10.35, 32);
+            const textureLoader = new THREE.TextureLoader();
+            const texture = textureLoader.load('https://raw.githubusercontent.com/Bedo77/3d-model-viewer/main/images/Logo.png');
+            texture.repeat.set(0.3, 0.3);
+            texture.wrapS = texture.wrapT = THREE.RepeatWrapping;
+            const material = new THREE.MeshStandardMaterial({ map: texture, color: 0x000000, roughness: 0.7, metalness: 0.1 });
+            ground = new THREE.Mesh(geometry, material);
+            ground.rotation.x = -Math.PI / 2;
+            ground.position.y = -0.1;
+            ground.receiveShadow = true;
+            ground.visible = !arMode;
+            currentScene.add(ground);
+        }
+
+        function createModelGroup() {
+            modelGroup = new THREE.Group();
+            currentScene.add(modelGroup);
+        }
+
+        function animate() {
+            animationFrameId = requestAnimationFrame(animate);
+            if (document.hidden) return;
+
+            modelGroup.children.forEach(model => {
+                let velocity = velocities.get(model) || { x: 0, y: 0 };
+                const acceleration = forceMagnitude / mass;
+                velocity.x += acceleration * 0.01;
+
+                const totalResistance = frictionCoefficient + airResistance;
+                velocity.x *= (1 - totalResistance * 0.1);
+
+                model.position.x += velocity.x;
+
+                if (model.position.y <= -0.1) {
+                    velocity.y = -velocity.y * elasticity;
+                    model.position.y = -0.1;
+                }
+                model.position.y += velocity.y;
+
+                velocities.set(model, velocity);
+            });
+
+            simRotationSpeed += torque * 0.01;
+            simRotationSpeed *= (1 - (frictionCoefficient + airResistance) * 0.1);
+
+            if (selectedModelIndex === -1) {
+                modelGroup.rotation.y += simRotationSpeed;
+            } else {
+                const model = modelGroup.children[0];
+                if (model) model.rotation.y += simRotationSpeed;
+            }
+
+            if (selectedModelIndex !== -1 && animationEnabled && mixers.length > 0) {
+                const delta = clock.getDelta();
+                mixers.forEach(mixer => mixer.update(delta));
+            }
+            if (currentControls) currentControls.update();
+            if (arMode) {
+                currentRenderer.clear();
+                currentRenderer.render(currentScene, currentCamera);
+            } else {
+                currentRenderer.render(currentScene, currentCamera);
+            }
+        }
+
+        function loadModels(models, viewportId, singleModelIndex = -1) {
+            currentModels = models;
+            selectedModelIndex = singleModelIndex;
+            const isSingleModel = selectedModelIndex >= 0;
+            const displayModels = isSingleModel ? [models[selectedModelIndex]] : models;
+
+            const viewport = document.getElementById(viewportId);
+            if (!viewport) return;
+
+            cleanupScene();
+            viewport.innerHTML = `
+                ${arMode ? '<video id="arVideo" autoplay playsinline style="position:absolute;width:100%;height:100%;object-fit:cover;z-index:-1;"></video>' : ''}
+                <div id="particles-js" style="position: absolute; width: 100%; height: 100%; z-index: 1;"></div>
+                <div class="control-panel">
+                    <div class="toggle-row">
+                        <span class="ar-label">Dive into AR Exploration</span>
+                        <label class="switch">
+                            <input type="checkbox" id="arToggle" ${arMode ? 'checked' : ''}>
+                            <span class="slider"></span>
+                        </label>
+                        <div class="error-message" id="arError"></div>
+                    </div>
+                    <div class="toggle-row" ${isSingleModel ? '' : 'style="display:none;"'}>
+                        <span class="animation-label">Play Model Animation</span>
+                        <label class="switch">
+                            <input type="checkbox" id="animationToggle" ${animationEnabled ? 'checked' : ''}>
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+                    <div class="model-selector">
+                        <div class="custom-dropdown">
+                            <div class="dropdown-selected" id="dropdownSelected">${selectedModelName}</div>
+                            <div class="dropdown-items" id="dropdownItems" style="display:none;">
+                                <div class="dropdown-item" data-value="-1">All Models</div>
+                                ${currentModels.map((m, i) => `<div class="dropdown-item" data-value="${i}">${m.name}</div>`).join('')}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div id="loadingMessage">Loading models...</div>
+            `;
+
+            initializeScene(viewportId);
+            viewport.appendChild(currentRenderer.domElement);
+
+            const arToggle = document.getElementById('arToggle');
+            arToggle?.addEventListener('change', toggleAR);
+            const animationToggle = document.getElementById('animationToggle');
+            animationToggle?.addEventListener('change', e => {
+                animationEnabled = e.target.checked;
+                mixers.forEach(mixer => mixer._actions.forEach(action => animationEnabled ? action.play() : action.stop()));
+            });
+
+            setupDropdown(viewportId);
+            loadModelContent(displayModels, isSingleModel);
+
+            const specificParamLabel = document.getElementById('specificParamLabel');
+            const specificParamInput = document.getElementById('specificParam');
+            const modelScaleLabel = document.getElementById('modelScaleLabel');
+            if (isSingleModel) {
+                specificParamLabel.style.display = 'flex';
+                specificParamLabel.firstChild.textContent = getSpecificParamLabel(selectedModelName);
+                specificParamInput.min = getSpecificParamRange(selectedModelName).min;
+                specificParamInput.max = getSpecificParamRange(selectedModelName).max;
+                specificParamInput.value = 1;
+                specificParamValue = 1;
+                document.getElementById('specificParamValue').textContent = '1.0';
+
+                modelScaleLabel.style.display = 'flex';
+                modelScaleValue = 1;
+                document.getElementById('modelScale').value = 1;
+                document.getElementById('modelScaleValue').textContent = '1.0';
+            } else {
+                specificParamLabel.style.display = 'none';
+                modelScaleLabel.style.display = 'none';
+            }
+
+            velocities.clear();
+
+            const mainContent = document.getElementById('mainContent');
+            if (arMode) {
+                mainContent.classList.add('ar-expanded');
+            } else {
+                mainContent.classList.remove('ar-expanded');
+            }
+
+            setTimeout(() => resizeRenderer(viewportId), 300);
+            initializeParticles();
+        }
+
+        function setupDropdown(viewportId) {
+            const dropdownSelected = document.getElementById('dropdownSelected');
+            const dropdownItems = document.getElementById('dropdownItems');
+            if (!dropdownSelected || !dropdownItems) return;
+            dropdownSelected.addEventListener('click', () => {
+                dropdownItems.style.display = dropdownItems.style.display === 'block' ? 'none' : 'block';
+            });
+            dropdownItems.querySelectorAll('.dropdown-item').forEach(item => {
+                item.addEventListener('click', () => {
+                    const value = parseInt(item.getAttribute('data-value'));
+                    selectedModelName = item.textContent;
+                    dropdownSelected.textContent = selectedModelName;
+                    dropdownItems.style.display = 'none';
+                    loadModels(currentModels, viewportId, value);
+                });
+            });
+        }
+
+        function loadModelContent(models, isSingleModel) {
+            const loader = new THREE.GLTFLoader();
+            models.forEach((model, index) => {
+                const url = model.path;
+                loader.load(url, gltf => {
+                    const scene = gltf.scene;
+                    adjustModelPositionAndScale(scene, model.name);
+                    const radius = isSingleModel ? 0 : 5;
+                    const angle = isSingleModel ? 0 : (Math.PI * 2 / models.length) * index;
+                    scene.position.set(radius * Math.cos(angle), 0, radius * Math.sin(angle));
+                    modelGroup.add(scene);
+
+                    originalPositions.set(scene, scene.position.clone());
+                    const box = new THREE.Box3().setFromObject(scene);
+                    const size = box.getSize(new THREE.Vector3());
+                    const maxDim = Math.max(size.x, size.y, size.z);
+                    const scale = 5 / maxDim;
+                    scene.scale.set(scale, scale, scale);
+                    originalScales.set(scene, new THREE.Vector3(scale, scale, scale));
+                    velocities.set(scene, { x: 0, y: 0 });
+
+                    if (gltf.animations.length > 0) {
+                        const mixer = new THREE.AnimationMixer(scene);
+                        gltf.animations.forEach(clip => {
+                            const action = mixer.clipAction(clip);
+                            if (isSingleModel && animationEnabled) action.play();
+                        });
+                        mixers.push(mixer);
+                    }
+
+                    if (index === 0 && isSingleModel) {
+                        const center = calculateGroupCenter([scene]);
+                        currentControls.target.copy(center);
+                        currentCamera.lookAt(center);
+                    }
+                    document.getElementById('loadingMessage').style.display = 'none';
+                });
+            });
+        }
+
+        function adjustModelPositionAndScale(object, modelName) {
+            const box = new THREE.Box3().setFromObject(object);
+            object.position.y = -box.min.y;
+        }
+
+        function calculateGroupCenter(models) {
+            const box = new THREE.Box3();
+            models.forEach(model => box.expandByObject(model));
+            const center = new THREE.Vector3();
+            box.getCenter(center);
+            return center;
+        }
+
+        function toggleAR(e) {
+            arMode = e.target.checked;
+            const mainContent = document.getElementById('mainContent');
+            const body = document.body;
+            const sidebar = document.querySelector('.sidebar');
+            const infoViewport = document.querySelector('.info-viewport');
+
+            if (arMode) {
+                mainContent.classList.add('ar-expanded');
+                body.classList.add('ar-active');
+                if (sidebar) sidebar.style.display = 'none';
+                if (infoViewport) infoViewport.style.display = 'none';
+                navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } })
+                    .then(stream => {
+                        arStream = stream;
+                        const video = document.getElementById('arVideo');
+                        video.srcObject = stream;
+                        video.play();
+                        currentRenderer.setClearColor(0x000000, 0);
+                        ground.visible = false;
+                    })
+                    .catch(err => {
+                        arMode = false;
+                        e.target.checked = false;
+                        mainContent.classList.remove('ar-expanded');
+                        body.classList.remove('ar-active');
+                        if (sidebar) sidebar.style.display = 'flex';
+                        if (infoViewport) infoViewport.style.display = 'block';
+                        loadModels(currentModels, currentViewportId, selectedModelIndex);
+                    });
+            } else {
+                mainContent.classList.remove('ar-expanded');
+                body.classList.remove('ar-active');
+                if (sidebar) sidebar.style.display = 'flex';
+                if (infoViewport) infoViewport.style.display = 'block';
+                if (arStream) arStream.getTracks().forEach(track => track.stop());
+                arStream = null;
+                currentRenderer.setClearColor(0x000000, 1);
+                ground.visible = true;
+            }
+            loadModels(currentModels, currentViewportId, selectedModelIndex);
+        }
+
+        function onCanvasDoubleClick(event) {
+            if (selectedModelIndex < 0) return;
+            const rect = currentRenderer.domElement.getBoundingClientRect();
+            mouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
+            mouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
+            raycaster.setFromCamera(mouse, currentCamera);
+            const intersects = raycaster.intersectObjects(modelGroup.children, true);
+            if (intersects.length > 0) {
+                const modelName = currentModels[selectedModelIndex].name;
+                const explanation = getStemExplanation(modelName);
+                showPopup(modelName, explanation);
+            }
+        }
+
+        function getStemExplanation(modelName) {
+            const explanations = {
+                'Grade One Arcade Machine': "A simple machine demonstration using levers and pulleys.",
+                'Grade One Time Machine': "Illustrates basic mechanical principles.",
+                'Forces on a Rotating Man': "Shows how forces affect rotational motion.",
+                'Electromagnetic Wave': "Visualizes wave propagation.",
+                'Electromagnetic Portal': "Explores electromagnetic field interactions."
+            };
+            return explanations[modelName] || "No explanation available.";
+        }
+
+        function showPopup(title, content) {
+            const popup = document.getElementById('infoPopup');
+            popup.querySelector('.popup-content').innerHTML = `<h3>${title}</h3><p>${content}</p>`;
+            popup.style.display = 'block';
+        }
+
+        function getSpecificParamLabel(modelName) {
+            const labels = {
+                'Grade One Arcade Machine': 'Lever Arm Length:',
+                'Grade One Time Machine': 'Gear Rotation Speed:',
+                'Forces on a Rotating Man': 'Centripetal Force:',
+                'Electromagnetic Wave': 'Wave Frequency:',
+                'Electromagnetic Portal': 'Field Strength:'
+            };
+            return labels[modelName] || 'Specific Parameter:';
+        }
+
+        function getSpecificParamRange(modelName) {
+            const ranges = {
+                'Grade One Arcade Machine': { min: '0.5', max: '2' },
+                'Grade One Time Machine': { min: '0', max: '0.1' },
+                'Forces on a Rotating Man': { min: '0.5', max: '2' },
+                'Electromagnetic Wave': { min: '0.5', max: '2' },
+                'Electromagnetic Portal': { min: '0.5', max: '2' }
+            };
+            return ranges[modelName] || { min: '0.5', max: '2' };
+        }
+
+        function debounce(func, wait) {
+            let timeout;
+            return function (...args) {
+                clearTimeout(timeout);
+                timeout = setTimeout(() => func.apply(this, args), wait);
+            };
+        }
+
+        function resetSimulation() {
+            simRotationSpeed = 0.005;
+            specificParamValue = 1;
+            modelScaleValue = 1;
+            forceMagnitude = 0;
+            frictionCoefficient = 0;
+            mass = 1;
+            elasticity = 0;
+            airResistance = 0;
+            torque = 0;
+            energyLevel = 1;
+            lightIntensity = 3;
+            ambientLightIntensity = 2;
+
+            document.getElementById('rotationSpeedSim').value = simRotationSpeed;
+            document.getElementById('rotationSpeedValue').textContent = simRotationSpeed.toFixed(3);
+            document.getElementById('specificParam').value = specificParamValue;
+            document.getElementById('specificParamValue').textContent = specificParamValue.toFixed(1);
+            document.getElementById('modelScale').value = modelScaleValue;
+            document.getElementById('modelScaleValue').textContent = modelScaleValue.toFixed(1);
+            document.getElementById('forceMagnitude').value = forceMagnitude;
+            document.getElementById('forceMagnitudeValue').textContent = forceMagnitude.toFixed(1);
+            document.getElementById('frictionCoefficient').value = frictionCoefficient;
+            document.getElementById('frictionCoefficientValue').textContent = frictionCoefficient.toFixed(2);
+            document.getElementById('mass').value = mass;
+            document.getElementById('massValue').textContent = mass.toFixed(1);
+            document.getElementById('elasticity').value = elasticity;
+            document.getElementById('elasticityValue').textContent = elasticity.toFixed(2);
+            document.getElementById('airResistance').value = airResistance;
+            document.getElementById('airResistanceValue').textContent = airResistance.toFixed(2);
+            document.getElementById('torque').value = torque;
+            document.getElementById('torqueValue').textContent = torque.toFixed(3);
+            document.getElementById('energyLevel').value = energyLevel;
+            document.getElementById('energyLevelValue').textContent = energyLevel.toFixed(1);
+            document.getElementById('lightIntensity').value = lightIntensity;
+            document.getElementById('lightIntensityValue').textContent = lightIntensity.toFixed(1);
+            document.getElementById('ambientLightIntensity').value = ambientLightIntensity;
+            document.getElementById('ambientLightIntensityValue').textContent = ambientLightIntensity.toFixed(1);
+
+            if (selectedModelIndex !== -1) {
+                const model = modelGroup.children[0];
+                if (model) {
+                    const originalPosition = originalPositions.get(model);
+                    if (originalPosition) {
+                        model.position.copy(originalPosition);
+                    }
+
+                    const originalScale = originalScales.get(model);
+                    if (originalScale) {
+                        model.scale.copy(originalScale);
+                    }
+
+                    velocities.set(model, { x: 0, y: 0 });
+
+                    if (mixers.length > 0) {
+                        mixers.forEach(mixer => {
+                            mixer._actions.forEach(action => {
+                                action.timeScale = 1;
+                            });
+                        });
+                    }
+                }
+            } else {
+                modelGroup.children.forEach(model => {
+                    const originalPosition = originalPositions.get(model);
+                    if (originalPosition) {
+                        model.position.copy(originalPosition);
+                    }
+                    const originalScale = originalScales.get(model);
+                    if (originalScale) {
+                        model.scale.copy(originalScale);
+                    }
+                    velocities.set(model, { x: 0, y: 0 });
+                });
+                modelGroup.rotation.y = 0;
+            }
+
+            if (spotLight) {
+                spotLight.intensity = lightIntensity;
+            }
+            if (ambientLight) {
+                ambientLight.intensity = ambientLightIntensity;
+            }
+        }
+
+        function setupGradeButtons() {
+            document.getElementById('btnGrade1').addEventListener('click', () => {
+                window.location.href = 'Grade One/grade_one.html';
+            });
+            document.getElementById('btnGrade2').addEventListener('click', () => {
+                alert('Grade 2 section not yet implemented.');
+            });
+            document.getElementById('btnGrade3').addEventListener('click', () => {
+                alert('Grade 3 section not yet implemented.');
+            });
+            document.getElementById('btnContentHub').addEventListener('click', showContentHub);
+        }
+
+        function updateInfoArea(grade) {
+            const infoViewport = document.getElementById('infoViewport');
+            infoViewport.innerHTML = `
+                <h2>Welcome to the Science Section</h2>
+                <p>Welcome to the <strong>Science Section</strong> of Smartistic-Lab Studio. Select a grade to explore science concepts through interactive 3D models and lesson plans.</p>
+            `;
+        }
+
+        function showContentHub() {
+            const modal = document.getElementById('contentHubModal');
+            const content = document.getElementById('contentHubContent');
+            content.innerHTML = '<p>Content Hub is not available in the main science section. Please select a grade to view lessons.</p>';
+            modal.style.display = 'block';
+        }
+
+        function setupControlListeners() {
+            const debouncedRotationSpeed = debounce(e => {
+                simRotationSpeed = parseFloat(e.target.value);
+                document.getElementById('rotationSpeedValue').textContent = simRotationSpeed.toFixed(3);
+            }, 50);
+            document.getElementById('rotationSpeedSim').addEventListener('input', debouncedRotationSpeed);
+
+            const debouncedSpecificParam = debounce(e => {
+                specificParamValue = parseFloat(e.target.value);
+                document.getElementById('specificParamValue').textContent = specificParamValue.toFixed(1);
+                if (selectedModelIndex !== -1) {
+                    const model = modelGroup.children[0];
+                    if (!model) return;
+
+                    switch (selectedModelName) {
+                        case 'Grade One Arcade Machine':
+                            model.scale.x = specificParamValue;
+                            break;
+                        case 'Grade One Time Machine':
+                            simRotationSpeed = specificParamValue;
+                            break;
+                        case 'Forces on a Rotating Man':
+                            model.position.x *= specificParamValue;
+                            model.position.z *= specificParamValue;
+                            break;
+                        case 'Electromagnetic Wave':
+                            if (mixers.length > 0) {
+                                mixers[0]._actions.forEach(action => {
+                                    action.timeScale = specificParamValue;
+                                });
+                            }
+                            break;
+                        case 'Electromagnetic Portal':
+                            model.scale.set(specificParamValue, specificParamValue, specificParamValue);
+                            break;
+                    }
+                }
+            }, 50);
+            document.getElementById('specificParam').addEventListener('input', debouncedSpecificParam);
+
+            const debouncedModelScale = debounce(e => {
+                modelScaleValue = parseFloat(e.target.value);
+                document.getElementById('modelScaleValue').textContent = modelScaleValue.toFixed(1);
+                if (selectedModelIndex !== -1) {
+                    const model = modelGroup.children[0];
+                    if (model) {
+                        const originalScale = originalScales.get(model);
+                        if (originalScale) {
+                            model.scale.set(
+                                originalScale.x * modelScaleValue,
+                                originalScale.y * modelScaleValue,
+                                originalScale.z * modelScaleValue
+                            );
+                        }
+                    }
+                }
+            }, 50);
+            document.getElementById('modelScale').addEventListener('input', debouncedModelScale);
+
+            const debouncedForceMagnitude = debounce(e => {
+                forceMagnitude = parseFloat(e.target.value);
+                document.getElementById('forceMagnitudeValue').textContent = forceMagnitude.toFixed(1);
+            }, 50);
+            document.getElementById('forceMagnitude').addEventListener('input', debouncedForceMagnitude);
+
+            const debouncedFrictionCoefficient = debounce(e => {
+                frictionCoefficient = parseFloat(e.target.value);
+                document.getElementById('frictionCoefficientValue').textContent = frictionCoefficient.toFixed(2);
+            }, 50);
+            document.getElementById('frictionCoefficient').addEventListener('input', debouncedFrictionCoefficient);
+
+            const debouncedMass = debounce(e => {
+                mass = parseFloat(e.target.value);
+                document.getElementById('massValue').textContent = mass.toFixed(1);
+            }, 50);
+            document.getElementById('mass').addEventListener('input', debouncedMass);
+
+            const debouncedElasticity = debounce(e => {
+                elasticity = parseFloat(e.target.value);
+                document.getElementById('elasticityValue').textContent = elasticity.toFixed(2);
+            }, 50);
+            document.getElementById('elasticity').addEventListener('input', debouncedElasticity);
+
+            const debouncedAirResistance = debounce(e => {
+                airResistance = parseFloat(e.target.value);
+                document.getElementById('airResistanceValue').textContent = airResistance.toFixed(2);
+            }, 50);
+            document.getElementById('airResistance').addEventListener('input', debouncedAirResistance);
+
+            const debouncedTorque = debounce(e => {
+                torque = parseFloat(e.target.value);
+                document.getElementById('torqueValue').textContent = torque.toFixed(3);
+            }, 50);
+            document.getElementById('torque').addEventListener('input', debouncedTorque);
+
+            const debouncedEnergyLevel = debounce(e => {
+                energyLevel = parseFloat(e.target.value);
+                document.getElementById('energyLevelValue').textContent = energyLevel.toFixed(1);
+                if (selectedModelIndex !== -1 && mixers.length > 0) {
+                    mixers.forEach(mixer => {
+                        mixer._actions.forEach(action => {
+                            action.timeScale = energyLevel;
+                        });
+                    });
+                } else {
+                    simRotationSpeed *= energyLevel;
+                }
+            }, 50);
+            document.getElementById('energyLevel').addEventListener('input', debouncedEnergyLevel);
+
+            const debouncedLightIntensity = debounce(e => {
+                lightIntensity = parseFloat(e.target.value);
+                document.getElementById('lightIntensityValue').textContent = lightIntensity.toFixed(1);
+                if (spotLight) {
+                    spotLight.intensity = lightIntensity;
+                }
+            }, 50);
+            document.getElementById('lightIntensity').addEventListener('input', debouncedLightIntensity);
+
+            const debouncedAmbientLightIntensity = debounce(e => {
+                ambientLightIntensity = parseFloat(e.target.value);
+                document.getElementById('ambientLightIntensityValue').textContent = ambientLightIntensity.toFixed(1);
+                if (ambientLight) {
+                    ambientLight.intensity = ambientLightIntensity;
+                }
+            }, 50);
+            document.getElementById('ambientLightIntensity').addEventListener('input', debouncedAmbientLightIntensity);
+
+            window.addEventListener('resize', () => resizeRenderer(currentViewportId));
+        }
+
+        function initializeParticles() {
+            particlesJS('particles-js', {
+                particles: {
+                    number: { value: 80, density: { enable: true, value_area: 800 } },
+                    color: { value: '#ffffff' },
+                    shape: { type: 'circle' },
+                    opacity: { value: 0.5, random: true },
+                    size: { value: 3, random: true },
+                    line_linked: { enable: false },
+                    move: { enable: true, speed: 1, direction: 'bottom', random: true }
+                },
+                interactivity: {
+                    detect_on: 'canvas',
+                    events: { onhover: { enable: false }, onclick: { enable: false }, resize: true }
+                },
+                retina_detect: true
+            });
+        }
+    </script>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'93989c3ade5fbfa1',t:'MTc0NjIwMDM1NS4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+</html>
